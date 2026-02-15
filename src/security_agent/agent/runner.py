@@ -12,7 +12,6 @@ from security_agent.agent.prompts import (
     format_findings_summary,
 )
 from security_agent.agent.tools import get_scanner_tool_definitions
-from security_agent.core.engine import ScanEngine
 from security_agent.models.scan_result import ScanResult
 from security_agent.utils.http_client import HttpClient
 from security_agent.ai.llm_client import get_llm_client
@@ -60,6 +59,8 @@ async def run_agent(
     if not tool_definitions:
         raise RuntimeError("No scanners enabled in config. Enable at least one scanner.")
 
+    # Import here to avoid circular dependency
+    from security_agent.core.engine import ScanEngine
     engine = ScanEngine(config, interactive=False, selected_scanners=None)
     ai_config = config.get("ai", {})
     max_tokens = ai_config.get("max_tokens", 4096)
