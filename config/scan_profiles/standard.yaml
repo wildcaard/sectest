@@ -1,0 +1,49 @@
+profile: standard
+description: "Standard security scan - passive scanners with basic active checks"
+
+scan:
+  timeout: 30
+  max_concurrent: 5
+  rate_limit: 10
+
+scanners:
+  headers:
+    enabled: true
+  ssl_tls:
+    enabled: true
+  cookies:
+    enabled: true
+  cors:
+    enabled: true
+  xss:
+    enabled: true
+    passive_only: true
+  sqli:
+    enabled: true
+    passive_only: true
+  csrf:
+    enabled: true
+  open_redirect:
+    enabled: true
+  info_disclosure:
+    enabled: true
+  subdomain:
+    enabled: true
+  directory:
+    enabled: false
+  cms_detect:
+    enabled: true
+  api_security:
+    enabled: true
+  clickjacking:
+    enabled: true
+  ssrf:
+    enabled: false
+  dependency:
+    enabled: true
+
+human_loop:
+  enabled: true
+  require_phase_approval: true
+  require_finding_review: false
+  auto_approve_info: true

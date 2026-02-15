@@ -1,0 +1,50 @@
+profile: comprehensive
+description: "Comprehensive deep security scan - all scanners enabled"
+
+scan:
+  timeout: 45
+  max_concurrent: 8
+  rate_limit: 15
+
+scanners:
+  headers:
+    enabled: true
+  ssl_tls:
+    enabled: true
+  cookies:
+    enabled: true
+  cors:
+    enabled: true
+  xss:
+    enabled: true
+    passive_only: true
+  sqli:
+    enabled: true
+    passive_only: true
+  csrf:
+    enabled: true
+  open_redirect:
+    enabled: true
+  info_disclosure:
+    enabled: true
+  subdomain:
+    enabled: true
+  directory:
+    enabled: true
+    max_depth: 3
+  cms_detect:
+    enabled: true
+  api_security:
+    enabled: true
+  clickjacking:
+    enabled: true
+  ssrf:
+    enabled: true
+  dependency:
+    enabled: true
+
+human_loop:
+  enabled: true
+  require_phase_approval: true
+  require_finding_review: true
+  auto_approve_info: false

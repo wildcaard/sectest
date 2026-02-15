@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security Report — {{ report.scan_result.target_url }}</title>
+<style>
+/* ================================================================
+   CSS RESET & VARIABLES
+   ================================================================ */
+:root {
+  --clr-critical: #dc3545;
+  --clr-high: #fd7e14;
+  --clr-medium: #ffc107;
+  --clr-low: #0dcaf0;
+  --clr-info: #6c757d;
+  --radius: 10px;
+  --shadow: 0 4px 24px rgba(0,0,0,.25);
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0f111a;
+  --bg-secondary: #1a1d2e;
+  --bg-card: #232740;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --border: #2d3250;
+  --accent: #6366f1;
+  --accent-light: #818cf8;
+  --code-bg: #161822;
+}
+
+[data-theme="light"] {
+  --bg-primary: #f1f5f9;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+  --accent: #4f46e5;
+  --accent-light: #6366f1;
+  --code-bg: #f8fafc;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.65;
+}
+
+a { color: var(--accent-light); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ================================================================
+   LAYOUT
+   ================================================================ */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+.section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow);
+}
+
+.section-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ================================================================
+   HEADER
+   ================================================================ */
+.report-header {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+  color: #fff;
+  padding: 48px 0 40px;
+  margin-bottom: 32px;
+  border-bottom: 3px solid var(--accent);
+}
+
+.report-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.report-header .subtitle {
+  opacity: 0.85;
+  margin-top: 6px;
+  font-size: 1.05rem;
+}
+
+.header-meta {
+  display: flex;
+  gap: 28px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.header-meta span {
+  background: rgba(255,255,255,.12);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+/* ================================================================
+   THEME TOGGLE
+   ================================================================ */
+.theme-toggle {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 1000;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  box-shadow: var(--shadow);
+  transition: background .2s;
+}
+.theme-toggle:hover { background: var(--accent); color: #fff; }
+
+/* ================================================================
+   TABLE OF CONTENTS
+   ================================================================ */
+.toc { columns: 2; column-gap: 32px; }
+.toc a {
+  display: block;
+  padding: 6px 0;
+  color: var(--text-secondary);
+  border-bottom: 1px dashed var(--border);
+  transition: color .15s;
+}
+.toc a:hover { color: var(--accent-light); text-decoration: none; }
+
+/* ================================================================
+   SCORE GAUGE
+   ================================================================ */
+.score-area {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+
+.gauge-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+
+.gauge-svg { transform: rotate(-90deg); }
+
+.gauge-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 14;
+}
+
+.gauge-fill {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease;
+}
+
+.gauge-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.gauge-score {
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.gauge-of {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.grade-badge {
+  font-size: 4rem;
+  font-weight: 900;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  color: #fff;
+}
+
+/* ================================================================
+   SEVERITY CARDS
+   ================================================================ */
+.severity-cards {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.sev-card {
+  flex: 1 1 120px;
+  min-width: 110px;
+  padding: 18px 14px;
+  border-radius: var(--radius);
+  text-align: center;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+}
+
+.sev-card .count { font-size: 2rem; display: block; }
+.sev-card .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
+
+.sev-critical { background: linear-gradient(135deg, #dc3545, #a71d2a); }
+.sev-high     { background: linear-gradient(135deg, #fd7e14, #d36100); }
+.sev-medium   { background: linear-gradient(135deg, #ffc107, #d4a106); color: #1e293b; }
+.sev-low      { background: linear-gradient(135deg, #0dcaf0, #0aa2c0); }
+.sev-info     { background: linear-gradient(135deg, #6c757d, #4a5568); }
+
+/* ================================================================
+   SEVERITY BAR CHART
+   ================================================================ */
+.bar-chart { margin-top: 20px; }
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 12px;
+}
+
+.bar-label {
+  width: 80px;
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.bar-track {
+  flex: 1;
+  height: 26px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width .6s ease;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  min-width: fit-content;
+}
+
+/* ================================================================
+   TECH TABLE
+   ================================================================ */
+.tech-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tech-table th,
+.tech-table td {
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tech-table th {
+  background: var(--bg-secondary);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-secondary);
+}
+
+/* ================================================================
+   FILTER BAR
+   ================================================================ */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 6px 16px;
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all .15s;
+}
+
+.filter-btn:hover, .filter-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ================================================================
+   VULNERABILITY CARDS
+   ================================================================ */
+.vuln-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: box-shadow .2s;
+  background: var(--bg-secondary);
+}
+
+.vuln-card:hover { box-shadow: 0 6px 30px rgba(0,0,0,.3); }
+
+.vuln-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  cursor: pointer;
+  user-select: none;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.vuln-header:hover { background: var(--bg-card); }
+
+.vuln-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.vuln-title { font-weight: 700; font-size: 1.05rem; }
+
+.severity-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.cvss-badge {
+  background: var(--bg-primary);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.chevron {
+  transition: transform .25s;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.vuln-card.open .chevron { transform: rotate(180deg); }
+
+.vuln-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .35s ease;
+}
+
+.vuln-card.open .vuln-body { max-height: 3000px; }
+
+.vuln-content {
+  padding: 0 20px 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.vuln-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.vuln-meta-item {
+  background: var(--bg-primary);
+  padding: 10px 14px;
+  border-radius: 8px;
+}
+
+.vuln-meta-item .meta-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.vuln-meta-item .meta-value { font-weight: 600; margin-top: 2px; }
+
+.vuln-section-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+  color: var(--accent-light);
+}
+
+pre, code {
+  font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.88rem;
+}
+
+.code-block-wrapper { position: relative; }
+
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: background .15s;
+}
+
+.copy-btn:hover { background: var(--accent); color: #fff; }
+
+/* ================================================================
+   ROADMAP
+   ================================================================ */
+.roadmap-phase {
+  border-left: 3px solid var(--accent);
+  padding-left: 20px;
+  margin-bottom: 24px;
+}
+
+.roadmap-phase h3 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.roadmap-phase ul { list-style: disc; padding-left: 18px; }
+.roadmap-phase li { padding: 3px 0; }
+
+/* ================================================================
+   DISCLAIMER FOOTER
+   ================================================================ */
+.disclaimer {
+  text-align: center;
+  padding: 32px 20px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border);
+  margin-top: 40px;
+}
+
+/* ================================================================
+   PRINT STYLES
+   ================================================================ */
+@media print {
+  body { background: #fff; color: #000; }
+  .theme-toggle, .filter-bar, .copy-btn { display: none !important; }
+  .section { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+  .report-header { background: #312e81 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .vuln-body { max-height: none !important; }
+  .severity-badge, .sev-card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<!-- Theme Toggle -->
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">Toggle Theme</button>
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header class="report-header">
+  <div class="container">
+    <h1>Security Assessment Report</h1>
+    <p class="subtitle">{{ report.scan_result.target_url }}</p>
+    <div class="header-meta">
+      <span>Scan ID: {{ report.scan_result.scan_id }}</span>
+      <span>Date: {{ report.scan_result.start_time.strftime('%Y-%m-%d %H:%M') if report.scan_result.start_time else 'N/A' }}</span>
+      <span>Duration: {{ report.scan_result.duration }}</span>
+      <span>Profile: {{ report.scan_result.profile }}</span>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ============================================================
+       TABLE OF CONTENTS
+       ============================================================ -->
+  <div class="section">
+    <div class="section-title">Table of Contents</div>
+    <div class="toc">
+      <a href="#executive-summary">Executive Summary</a>
+      <a href="#severity-distribution">Severity Distribution</a>
+      <a href="#scope-methodology">Scope &amp; Methodology</a>
+      <a href="#tech-stack">Technology Stack</a>
+      <a href="#vulnerabilities">Vulnerability Details</a>
+      <a href="#remediation-roadmap">Remediation Roadmap</a>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       EXECUTIVE SUMMARY
+       ============================================================ -->
+  <div class="section" id="executive-summary">
+    <div class="section-title">Executive Summary</div>
+
+    <div class="score-area">
+      <!-- Circular gauge -->
+      <div class="gauge-container">
+        {% set score = report.scan_result.security_score %}
+        {% set circumference = 2 * 3.14159 * 75 %}
+        {% set offset = circumference - (score / 100) * circumference %}
+        {% if score >= 80 %}{% set gauge_color = '#22c55e' %}
+        {% elif score >= 60 %}{% set gauge_color = '#ffc107' %}
+        {% elif score >= 40 %}{% set gauge_color = '#fd7e14' %}
+        {% else %}{% set gauge_color = '#dc3545' %}{% endif %}
+        <svg class="gauge-svg" width="180" height="180" viewBox="0 0 180 180">
+          <circle class="gauge-bg" cx="90" cy="90" r="75" />
+          <circle class="gauge-fill" cx="90" cy="90" r="75"
+                  stroke="{{ gauge_color }}"
+                  stroke-dasharray="{{ circumference }}"
+                  stroke-dashoffset="{{ offset }}" />
+        </svg>
+        <div class="gauge-label">
+          <div class="gauge-score">{{ score }}</div>
+          <div class="gauge-of">/ 100</div>
+        </div>
+      </div>
+
+      <!-- Grade -->
+      {% set grade = report.scan_result.grade %}
+      {% if grade == 'A' %}{% set grade_bg = '#22c55e' %}
+      {% elif grade == 'B' %}{% set grade_bg = '#84cc16' %}
+      {% elif grade == 'C' %}{% set grade_bg = '#ffc107' %}
+      {% elif grade == 'D' %}{% set grade_bg = '#fd7e14' %}
+      {% else %}{% set grade_bg = '#dc3545' %}{% endif %}
+      <div class="grade-badge" style="background:{{ grade_bg }}">{{ grade }}</div>
+
+      <!-- Summary text -->
+      <div style="flex:1;min-width:250px">
+        {% if report.executive_summary %}
+        <p>{{ report.executive_summary }}</p>
+        {% endif %}
+        {% if report.ai_risk_assessment %}
+        <p style="margin-top:12px;color:var(--text-secondary)"><strong>AI Risk Assessment:</strong> {{ report.ai_risk_assessment }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Severity count cards -->
+    {% set counts = report.scan_result.severity_counts %}
+    <div class="severity-cards">
+      <div class="sev-card sev-critical">
+        <span class="count">{{ counts.get('critical', 0) }}</span>
+        <span class="label">Critical</span>
+      </div>
+      <div class="sev-card sev-high">
+        <span class="count">{{ counts.get('high', 0) }}</span>
+        <span class="label">High</span>
+      </div>
+      <div class="sev-card sev-medium">
+        <span class="count">{{ counts.get('medium', 0) }}</span>
+        <span class="label">Medium</span>
+      </div>
+      <div class="sev-card sev-low">
+        <span class="count">{{ counts.get('low', 0) }}</span>
+        <span class="label">Low</span>
+      </div>
+      <div class="sev-card sev-info">
+        <span class="count">{{ counts.get('info', 0) }}</span>
+        <span class="label">Info</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SEVERITY DISTRIBUTION BAR CHART
+       ============================================================ -->
+  <div class="section" id="severity-distribution">
+    <div class="section-title">Severity Distribution</div>
+    {% set total = report.scan_result.vulnerabilities | length %}
+    {% set counts = report.scan_result.severity_counts %}
+    <div class="bar-chart">
+      {% for sev, color in [('critical', '#dc3545'), ('high', '#fd7e14'), ('medium', '#ffc107'), ('low', '#0dcaf0'), ('info', '#6c757d')] %}
+      {% set c = counts.get(sev, 0) %}
+      {% set pct = (c / total * 100) if total > 0 else 0 %}
+      <div class="bar-row">
+        <div class="bar-label" style="color:{{ color }}">{{ sev }}</div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:{{ pct }}%;background:{{ color }}">{{ c }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SCOPE & METHODOLOGY
+       ============================================================ -->
+  <div class="section" id="scope-methodology">
+    <div class="section-title">Scope &amp; Methodology</div>
+    <div class="vuln-meta">
+      <div class="vuln-meta-item">
+        <div class="meta-label">Target URL</div>
+        <div class="meta-value">{{ report.scan_result.target_url }}</div>
+      </div>
+      <div class="vuln-meta-item">
+        <div class="meta-label">Scan Profile</div>
+        <div class="meta-value">{{ report.scan_result.profile }}</div>
+      </div>
+      <div class="vuln-meta-item">
+        <div class="meta-label">Total Requests</div>
+        <div class="meta-value">{{ report.scan_result.total_requests }}</div>
+      </div>
+      <div class="vuln-meta-item">
+        <div class="meta-label">Human Reviewed</div>
+        <div class="meta-value">{{ 'Yes' if report.scan_result.human_reviewed else 'No' }}</div>
+      </div>
+    </div>
+    <div style="margin-top:18px">
+      <div class="vuln-section-title">Scanners Used</div>
+      <ul style="padding-left:20px">
+        {% for scanner in report.scan_result.scanners_run %}
+        <li>{{ scanner }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% if report.scan_result.errors %}
+    <div style="margin-top:18px">
+      <div class="vuln-section-title" style="color:var(--clr-high)">Errors Encountered</div>
+      <ul style="padding-left:20px">
+        {% for err in report.scan_result.errors %}
+        <li>{{ err }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ============================================================
+       TECHNOLOGY STACK
+       ============================================================ -->
+  <div class="section" id="tech-stack">
+    <div class="section-title">Technology Stack</div>
+    {% if report.scan_result.technologies_detected %}
+    <table class="tech-table">
+      <thead><tr><th>Category</th><th>Technology</th></tr></thead>
+      <tbody>
+        {% for category, tech in report.scan_result.technologies_detected.items() %}
+        <tr>
+          <td>{{ category }}</td>
+          <td>{{ tech if tech is string else tech | join(', ') if tech is iterable else tech }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--text-secondary)">No technologies were detected.</p>
+    {% endif %}
+  </div>
+
+  <!-- ============================================================
+       VULNERABILITY DETAILS
+       ============================================================ -->
+  <div class="section" id="vulnerabilities">
+    <div class="section-title">Vulnerability Details ({{ sorted_vulnerabilities | length }})</div>
+
+    <!-- Filter buttons -->
+    <div class="filter-bar">
+      <button class="filter-btn active" data-severity="all" onclick="filterVulns('all', this)">All</button>
+      <button class="filter-btn" data-severity="critical" onclick="filterVulns('critical', this)" style="border-color:var(--clr-critical)">Critical</button>
+      <button class="filter-btn" data-severity="high" onclick="filterVulns('high', this)" style="border-color:var(--clr-high)">High</button>
+      <button class="filter-btn" data-severity="medium" onclick="filterVulns('medium', this)" style="border-color:var(--clr-medium)">Medium</button>
+      <button class="filter-btn" data-severity="low" onclick="filterVulns('low', this)" style="border-color:var(--clr-low)">Low</button>
+      <button class="filter-btn" data-severity="info" onclick="filterVulns('info', this)" style="border-color:var(--clr-info)">Info</button>
+    </div>
+
+    {% if sorted_vulnerabilities | length == 0 %}
+    <p style="color:var(--text-secondary);text-align:center;padding:40px">No vulnerabilities were discovered during this scan.</p>
+    {% endif %}
+
+    {% for vuln in sorted_vulnerabilities %}
+    {% set sev = vuln.severity.value if vuln.severity.value is defined else vuln.severity | string | lower %}
+    {% set sev_lower = sev | lower %}
+    {% set sev_colors = {'critical': '#dc3545', 'high': '#fd7e14', 'medium': '#ffc107', 'low': '#0dcaf0', 'info': '#6c757d'} %}
+    {% set sev_color = sev_colors.get(sev_lower, '#6c757d') %}
+    <div class="vuln-card" data-severity="{{ sev_lower }}">
+      <div class="vuln-header" onclick="toggleVuln(this)">
+        <div class="vuln-title-group">
+          <span class="severity-badge" style="background:{{ sev_color }}">{{ sev_lower }}</span>
+          <span class="vuln-title">{{ vuln.title }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          {% if vuln.cvss_score is not none %}
+          <span class="cvss-badge">CVSS {{ vuln.cvss_score }}</span>
+          {% endif %}
+          <span class="chevron">&#9660;</span>
+        </div>
+      </div>
+      <div class="vuln-body">
+        <div class="vuln-content">
+          <!-- Meta grid -->
+          <div class="vuln-meta">
+            <div class="vuln-meta-item">
+              <div class="meta-label">Category</div>
+              <div class="meta-value">{{ vuln.category.value if vuln.category.value is defined else vuln.category }}</div>
+            </div>
+            {% if vuln.cwe_id %}
+            <div class="vuln-meta-item">
+              <div class="meta-label">CWE</div>
+              <div class="meta-value">{{ vuln.cwe_id }}</div>
+            </div>
+            {% endif %}
+            {% if vuln.owasp_category %}
+            <div class="vuln-meta-item">
+              <div class="meta-label">OWASP</div>
+              <div class="meta-value">{{ vuln.owasp_category }}</div>
+            </div>
+            {% endif %}
+            {% if vuln.url %}
+            <div class="vuln-meta-item">
+              <div class="meta-label">URL</div>
+              <div class="meta-value" style="word-break:break-all">{{ vuln.url }}</div>
+            </div>
+            {% endif %}
+            {% if vuln.scanner_name %}
+            <div class="vuln-meta-item">
+              <div class="meta-label">Scanner</div>
+              <div class="meta-value">{{ vuln.scanner_name }}</div>
+            </div>
+            {% endif %}
+            {% if vuln.false_positive_likelihood %}
+            <div class="vuln-meta-item">
+              <div class="meta-label">False Positive Likelihood</div>
+              <div class="meta-value">{{ vuln.false_positive_likelihood }}</div>
+            </div>
+            {% endif %}
+            {% if vuln.human_verified %}
+            <div class="vuln-meta-item">
+              <div class="meta-label">Human Verified</div>
+              <div class="meta-value" style="color:#22c55e">Yes</div>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Description -->
+          <div>
+            <div class="vuln-section-title">Description</div>
+            <p>{{ vuln.description or 'No description provided.' }}</p>
+          </div>
+
+          <!-- Evidence -->
+          {% if vuln.evidence %}
+          <div>
+            <div class="vuln-section-title">Evidence</div>
+            <div class="code-block-wrapper">
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <pre class="code-block">{{ vuln.evidence }}</pre>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Remediation -->
+          {% if vuln.remediation %}
+          <div>
+            <div class="vuln-section-title">Remediation</div>
+            <p>{{ vuln.remediation }}</p>
+          </div>
+          {% endif %}
+
+          <!-- AI Analysis -->
+          {% if vuln.ai_analysis %}
+          <div>
+            <div class="vuln-section-title">AI Analysis</div>
+            <p style="color:var(--text-secondary)">{{ vuln.ai_analysis }}</p>
+          </div>
+          {% endif %}
+
+          <!-- AI Fix Suggestion -->
+          {% if vuln.ai_fix_suggestion %}
+          <div>
+            <div class="vuln-section-title">Suggested Fix</div>
+            <div class="code-block-wrapper">
+              <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+              <pre class="code-block">{{ vuln.ai_fix_suggestion }}</pre>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- References -->
+          {% if vuln.references %}
+          <div>
+            <div class="vuln-section-title">References</div>
+            <ul style="padding-left:18px">
+              {% for ref in vuln.references %}
+              <li><a href="{{ ref }}" target="_blank" rel="noopener">{{ ref }}</a></li>
+              {% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          <!-- Human notes -->
+          {% if vuln.human_notes %}
+          <div style="background:var(--bg-primary);padding:14px;border-radius:8px;border-left:3px solid var(--accent)">
+            <strong>Reviewer Notes:</strong> {{ vuln.human_notes }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ============================================================
+       REMEDIATION ROADMAP
+       ============================================================ -->
+  <div class="section" id="remediation-roadmap">
+    <div class="section-title">Remediation Roadmap</div>
+
+    {% if report.remediation_roadmap %}
+      {% if report.remediation_roadmap is mapping %}
+        {% for phase, items in report.remediation_roadmap.items() %}
+        <div class="roadmap-phase">
+          <h3>{{ phase }}</h3>
+          {% if items is iterable and items is not string %}
+          <ul>
+            {% for item in items %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p>{{ items }}</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <p>{{ report.remediation_roadmap }}</p>
+      {% endif %}
+    {% else %}
+      <div class="roadmap-phase">
+        <h3>Quick Wins (0-1 week)</h3>
+        <ul>
+        {% for vuln in sorted_vulnerabilities %}
+          {% set sev = vuln.severity.value if vuln.severity.value is defined else vuln.severity | string | lower %}
+          {% if sev | lower in ['info', 'low'] %}
+          <li>[{{ sev | upper }}] {{ vuln.title }}</li>
+          {% endif %}
+        {% endfor %}
+        </ul>
+      </div>
+      <div class="roadmap-phase">
+        <h3>Short-Term (1-4 weeks)</h3>
+        <ul>
+        {% for vuln in sorted_vulnerabilities %}
+          {% set sev = vuln.severity.value if vuln.severity.value is defined else vuln.severity | string | lower %}
+          {% if sev | lower in ['medium', 'high'] %}
+          <li>[{{ sev | upper }}] {{ vuln.title }}</li>
+          {% endif %}
+          {% if sev | lower == 'critical' %}
+          <li>Apply workaround / WAF rule for: {{ vuln.title }}</li>
+          {% endif %}
+        {% endfor %}
+        </ul>
+      </div>
+      <div class="roadmap-phase">
+        <h3>Long-Term (1-3 months)</h3>
+        <ul>
+        {% for vuln in sorted_vulnerabilities %}
+          {% set sev = vuln.severity.value if vuln.severity.value is defined else vuln.severity | string | lower %}
+          {% if sev | lower == 'critical' %}
+          <li>[CRITICAL] {{ vuln.title }}</li>
+          {% endif %}
+        {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  </div>
+
+</main>
+
+<!-- ============================================================
+     DISCLAIMER FOOTER
+     ============================================================ -->
+<footer class="disclaimer">
+  <div class="container">
+    <p><strong>Disclaimer:</strong> This report is generated by an automated security scanning tool
+    and is intended for authorized security assessments only. Findings should be validated by a
+    qualified security professional before taking action. False positives may exist.
+    The authors assume no liability for actions taken based on this report.</p>
+    <p style="margin-top:10px;opacity:.6">Generated by Web Security Agent</p>
+  </div>
+</footer>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+/* Theme toggle */
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+}
+
+/* Collapsible vulnerability cards */
+function toggleVuln(header) {
+  const card = header.closest('.vuln-card');
+  card.classList.toggle('open');
+}
+
+/* Filter vulnerabilities by severity */
+function filterVulns(severity, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.querySelectorAll('.vuln-card').forEach(card => {
+    if (severity === 'all' || card.dataset.severity === severity) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+/* Copy code block to clipboard */
+function copyCode(btn) {
+  const pre = btn.parentElement.querySelector('pre');
+  const text = pre.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  });
+}
+
+/* Smooth scroll for TOC links */
+document.querySelectorAll('.toc a').forEach(link => {
+  link.addEventListener('click', function(e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+profile: quick
+description: "Quick security scan - headers, SSL, and cookies only"
+
+scan:
+  timeout: 15
+  max_concurrent: 3
+  rate_limit: 5
+
+scanners:
+  headers:
+    enabled: true
+  ssl_tls:
+    enabled: true
+  cookies:
+    enabled: true
+  cors:
+    enabled: false
+  xss:
+    enabled: false
+  sqli:
+    enabled: false
+  csrf:
+    enabled: false
+  open_redirect:
+    enabled: false
+  info_disclosure:
+    enabled: true
+  subdomain:
+    enabled: false
+  directory:
+    enabled: false
+  cms_detect:
+    enabled: true
+  api_security:
+    enabled: false
+  clickjacking:
+    enabled: true
+  ssrf:
+    enabled: false
+  dependency:
+    enabled: false
+
+human_loop:
+  enabled: true
+  require_phase_approval: false
+  require_finding_review: false
+  auto_approve_info: true

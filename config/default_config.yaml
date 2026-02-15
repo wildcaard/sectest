@@ -1,0 +1,106 @@
+scan:
+  timeout: 30
+  max_concurrent: 5
+  rate_limit: 10
+  user_agent: "SecurityAgent/1.0 (Authorized Security Scan)"
+  follow_redirects: true
+  max_redirects: 5
+  verify_ssl: true
+
+scanners:
+  headers:
+    enabled: true
+    phase: 2
+  ssl_tls:
+    enabled: true
+    phase: 2
+  cors:
+    enabled: true
+    phase: 2
+    test_origins:
+      - "https://evil.com"
+      - "null"
+      - "https://{{domain}}.evil.com"
+  cookies:
+    enabled: true
+    phase: 2
+  xss:
+    enabled: true
+    phase: 3
+    passive_only: true
+  sqli:
+    enabled: true
+    phase: 3
+    passive_only: true
+  csrf:
+    enabled: true
+    phase: 3
+  open_redirect:
+    enabled: true
+    phase: 3
+  info_disclosure:
+    enabled: true
+    phase: 2
+    paths:
+      - "/.git/config"
+      - "/.env"
+      - "/robots.txt"
+      - "/sitemap.xml"
+      - "/.htaccess"
+      - "/web.config"
+      - "/wp-config.php.bak"
+      - "/package.json"
+      - "/.well-known/security.txt"
+  subdomain:
+    enabled: true
+    phase: 1
+  directory:
+    enabled: true
+    phase: 3
+    wordlist: "common"
+    max_depth: 2
+  cms_detect:
+    enabled: true
+    phase: 1
+  api_security:
+    enabled: true
+    phase: 3
+  clickjacking:
+    enabled: true
+    phase: 2
+  ssrf:
+    enabled: true
+    phase: 3
+  dependency:
+    enabled: true
+    phase: 2
+  token_hijacking:
+    enabled: true
+    phase: 2
+
+ai:
+  enabled: true
+  provider: anthropic   # anthropic | openai | ollama
+  model: "claude-sonnet-4-20250514"
+  max_tokens: 4096
+  base_url: "http://localhost:11434"   # for ollama only; optional override
+  analyze_findings: true
+  suggest_fixes: true
+  assess_risk: true
+
+reporting:
+  formats: ["html", "json"]
+  include_evidence: true
+  include_raw_responses: false
+  sanitize_sensitive: true
+  output_dir: "./reports"
+
+human_loop:
+  enabled: true
+  require_phase_approval: true
+  require_finding_review: false
+  auto_approve_info: true
+
+# Agent mode (secagent agent): max LLM turns for scanner selection
+agent:
+  max_turns: 10
