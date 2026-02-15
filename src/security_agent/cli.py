@@ -27,7 +27,7 @@ console = Console()
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.pass_context
 def cli(ctx, verbose):
-    """Web Security Analysis Agent - Intelligent vulnerability scanner with human-in-the-loop."""
+    """SecTest Agent - Intelligent vulnerability scanner with human-in-the-loop."""
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = verbose
     setup_logger(verbose=verbose)

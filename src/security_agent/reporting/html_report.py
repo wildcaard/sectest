@@ -1,6 +1,7 @@
 """HTML report generator using Jinja2 templates."""
 
 import os
+from datetime import datetime
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
@@ -31,6 +32,7 @@ class HtmlReportGenerator:
 
         env.filters["severity_color"] = self._severity_color
         env.filters["severity_order"] = self._severity_order
+        env.filters["format_datetime"] = self._format_datetime
 
         template = env.get_template(self.TEMPLATE_NAME)
 
@@ -78,3 +80,16 @@ class HtmlReportGenerator:
     def _severity_order(severity: str) -> int:
         order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
         return order.get(severity.lower(), 5)
+
+    @staticmethod
+    def _format_datetime(datetime_str: str, format_str: str = '%Y-%m-%d %H:%M') -> str:
+        """Format an ISO datetime string using strftime format."""
+        if not datetime_str:
+            return 'N/A'
+        try:
+            # Parse ISO format datetime string
+            dt = datetime.fromisoformat(datetime_str)
+            return dt.strftime(format_str)
+        except (ValueError, TypeError):
+            # If parsing fails, return the original string
+            return str(datetime_str)

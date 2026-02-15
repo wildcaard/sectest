@@ -3,13 +3,13 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "web-security-agent"
+name = "sectest-agent"
 version = "1.0.0"
-description = "CLI-based Website Security Analysis & Vulnerability Agent with Human-in-the-Loop"
+description = "CLI-based Security Testing & Vulnerability Analysis Agent with Human-in-the-Loop"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
-authors = [{name = "Security Agent Team"}]
+authors = [{name = "SecTest Agent Team"}]
 
 dependencies = [
     "click>=8.1",

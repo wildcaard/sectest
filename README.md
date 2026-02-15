@@ -1,6 +1,6 @@
-# Web Security Analysis Agent
+# SecTest Agent
 
-CLI-based website security analysis and vulnerability scanner with a **human-in-the-loop** workflow. Run automated security scans, review findings interactively, and generate reports in HTML, Markdown, or JSON. **Agent mode** lets the AI choose which scanners to run each turn based on findings.
+CLI-based security testing and vulnerability scanner with a **human-in-the-loop** workflow. Run automated security scans, review findings interactively, and generate reports in HTML, Markdown, or JSON. **Agent mode** lets the AI choose which scanners to run each turn based on findings.
 
 ## Prerequisites
 
