@@ -12,7 +12,7 @@ from security_agent.core.scheduler import ScanScheduler
 from security_agent.models.scan_result import ScanResult
 from security_agent.models.vulnerability import Vulnerability
 from security_agent.utils.http_client import HttpClient
-from security_agent.utils.validators import validate_url, normalize_url
+from security_agent.utils.validators import validate_url, normalize_url, is_localhost_url
 from security_agent.agent.tools import SCANNER_CLASSES, get_scanner_class_by_id
 
 console = Console()
@@ -88,6 +88,14 @@ class ScanEngine:
                 raise ValueError(result)
             target_url = normalize_url(result)
             self.scan_result = ScanResult(target_url=target_url, profile="agent")
+            
+            # Show warning for localhost scanning  
+            if is_localhost_url(target_url):
+                console.print(
+                    "[bold yellow]⚠️  WARNING: Scanning localhost/local addresses[/]\n"
+                    "[yellow]• Only scan targets you own or have explicit permission to test[/]\n"
+                    "[yellow]• Be careful not to interfere with running services[/]"
+                )
 
         scanners = []
         for tool_id in scanner_ids:
@@ -119,6 +127,14 @@ class ScanEngine:
 
         target_url = normalize_url(result)
         self.scan_result = ScanResult(target_url=target_url, profile=profile or "standard")
+
+        # Show warning for localhost scanning
+        if is_localhost_url(target_url):
+            console.print(
+                "[bold yellow]⚠️  WARNING: Scanning localhost/local addresses[/]\n"
+                "[yellow]• Only scan targets you own or have explicit permission to test[/]\n"
+                "[yellow]• Be careful not to interfere with running services[/]"
+            )
 
         self._display_banner()
         self._display_disclaimer()
@@ -240,7 +256,7 @@ class ScanEngine:
     def _display_banner(self):
         """Display the startup banner."""
         banner = Text()
-        banner.append("\n  Web Security Analysis Agent v1.0\n", style="bold cyan")
+        banner.append("\n  SecTest Agent v1.0\n", style="bold cyan")
         banner.append("  ─────────────────────────────────────\n", style="cyan")
         banner.append("  Intelligent Vulnerability Scanner with Human-in-Loop\n", style="dim")
         console.print(Panel(banner, border_style="bold cyan"))
