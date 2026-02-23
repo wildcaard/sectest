@@ -77,6 +77,9 @@ scanners:
   token_hijacking:
     enabled: true
     phase: 2
+  jwt:
+    enabled: true
+    phase: 2
 
 ai:
   enabled: true

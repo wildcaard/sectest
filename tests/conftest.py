@@ -26,6 +26,7 @@ def config_all_scanners_enabled():
             "ssrf": {"enabled": True},
             "dependency": {"enabled": True},
             "token_hijacking": {"enabled": True},
+            "jwt": {"enabled": True},
         },
         "ai": {"enabled": True, "max_tokens": 4096},
         "agent": {"max_turns": 10},

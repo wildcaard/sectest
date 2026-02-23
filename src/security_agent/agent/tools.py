@@ -20,6 +20,7 @@ from security_agent.scanners.clickjacking import ClickjackingScanner
 from security_agent.scanners.ssrf import SSRFScanner
 from security_agent.scanners.dependency import DependencyScanner
 from security_agent.scanners.token_hijacking import TokenHijackingScanner
+from security_agent.scanners.jwt import JWTAnalyzer
 
 # Same scanner classes as ScanEngine; order matches engine for consistency.
 # Tool IDs are derived from module name (e.g. headers, ssl_tls) to match config keys.
@@ -41,6 +42,7 @@ SCANNER_CLASSES: list[type[BaseScanner]] = [
     ClickjackingScanner,
     SSRFScanner,
     DependencyScanner,
+    JWTAnalyzer,
 ]
 
 
